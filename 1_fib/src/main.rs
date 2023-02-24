@@ -166,6 +166,8 @@ impl<F: FieldExt> Circuit<F> for FibCircuit<F> {
         mut layouter: impl Layouter<F>,
     ) -> Result<(), Error> {
 
+        layouter.
+
         let (n_cell, fib_cell) = layouter.assign_region(
             || "region1",
             |mut region| {
