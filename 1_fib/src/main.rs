@@ -10,60 +10,12 @@ use halo2_proofs::{
 };
 
 mod is_zero;
+mod util;
+
 use is_zero::{IsZeroChip, IsZeroConfig};
+use util::*;
 
 
-fn and<F: FieldExt>(lhe: Expression<F>, rhe: Expression<F>) -> Expression<F> {
-    lhe * rhe
-}
-
-fn eq<F: FieldExt>(lhe: Expression<F>, rhe: Expression<F>) -> Expression<F> {
-    lhe - rhe
-}
-
-fn not<F: FieldExt>(e: Expression<F>) -> Expression<F> {
-    Expression::Constant(F::one()) - e 
-}
-
-pub fn is_bool<F: FieldExt>(e: Expression<F>) -> Expression<F> {
-    e.clone() * (e - Expression::Constant(F::one()))
-}
-
-// A=>B  eq ~(A & ~B) (it is not the case that A is true and B is false)
-fn xif<F: FieldExt>(a: Expression<F>, b: Expression<F>) -> Expression<F> {
-    and(a, not(b))
-}
-
-fn fstr<F:FieldExt>(n: &F) -> String {
-    let s = format!("{:?}",n);
-    if let Some(mut hex ) = s.strip_prefix("0x") {
-        while hex.len() > 1 && hex.starts_with('0') {
-            hex = &hex[1..];
-        }
-        if hex.len() < 8 {
-            format!("{}",u64::from_str_radix(hex, 16).unwrap())
-        } else {
-            format!("0x{hex:}")
-        }
-    } else {
-        s
-    }
-}
-
-fn eval<F :FieldExt>(expr: Expression<F>) -> F {
-    expr.evaluate(
-        &|c| c, 
-        &|_| unimplemented!(), 
-        &|_| unimplemented!(),
-        &|_| unimplemented!(),
-        &|_| unimplemented!(),
-        &|_| unimplemented!(),
-        &|v| F::zero()-v,
-        &|a,b| a+b,
-        &|a,b| a*b,
-        &|a,b| a*b
-    )
-}
 
 #[derive(Default, Debug, Clone)]
 struct FibCircuit<F: FieldExt> {
@@ -98,14 +50,6 @@ impl<F: FieldExt> Circuit<F> for FibCircuit<F> {
     fn without_witnesses(&self) -> Self {
         Self::default()
     }
-
-    /*
-      a   b   c  count I
-      1   1   2  3     3
-      1   2   3  2 .   5
-      2   3   4  1
-      3   4   5  0
-    */
 
     fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
         let one = Expression::Constant(F::one());
